@@ -27,9 +27,11 @@ type
   public
     procedure AttachToBitmap(const ABitmap:TBitmap);
     procedure UnattachBitmap;
+
     constructor Create(const AWidth,AHeight:Integer);overload;
     constructor Create(const ABitmap:TBitmap); overload;
     destructor Destroy;
+
     property Pixels[X:Integer;Y:Integer]:PRGBTriple read GetPixel;
     property Width:Integer read GetWidth;
     property Height:Integer read GetHeight;
@@ -121,8 +123,11 @@ end;
 
 procedure TFastBMP.UnattachBitmap;
 begin
-  FBitmap:= FOriginalBitmap;
-  FOriginalBitmap:= nil;
+  if Assigned(FOriginalBitmap) then
+  begin
+    FBitmap:= FOriginalBitmap;
+    FOriginalBitmap:= nil;
+  end;
 end;
 
 end.
