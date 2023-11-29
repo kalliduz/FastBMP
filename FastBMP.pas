@@ -18,13 +18,15 @@ type
     FBitmap:TBitmap;
     FLines: array of PRGBTripleArray;
     procedure InitializeBitmap(const AWidth,AHeight:Integer; const APixelFormat:TPixelFormat = pf24bit);
-    procedure AssignBitmap(const ABitmap:TBitmap);
+
 
     procedure BuildLineAccessArray;
     function GetPixel(X, Y: Integer): PRGBTriple;
     function GetHeight: Integer;
     function GetWidth: Integer;
   public
+    procedure AssignBitmap(const ABitmap:TBitmap);overload;
+    procedure AssignBitmap(const ABitmap:TFastBMP);overload;
     procedure AttachToBitmap(const ABitmap:TBitmap);
     procedure UnattachBitmap;
 
@@ -38,6 +40,8 @@ type
   end;
 
 implementation
+uses
+  SysUtils;
 
 { TFastBMP }
 
@@ -54,6 +58,15 @@ begin
   BuildLineAccessArray;
 end;
 
+
+procedure TFastBMP.AssignBitmap(const ABitmap: TFastBMP);
+begin
+  {
+    we always want to assign our primary bitmap
+    this means also an attached bitmap might be copied this way
+  }
+  AssignBitmap(ABitmap.FBitmap);
+end;
 
 procedure TFastBMP.AttachToBitmap(const ABitmap: TBitmap);
 begin
