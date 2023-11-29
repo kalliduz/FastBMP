@@ -21,7 +21,7 @@ type
 
 
     procedure BuildLineAccessArray;
-    function GetPixel(X, Y: Integer): PRGBTriple;
+    function GetPixel(X, Y: Integer): PRGBTriple; inline;
     function GetHeight: Integer;
     function GetWidth: Integer;
   public
