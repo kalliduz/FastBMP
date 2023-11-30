@@ -29,6 +29,7 @@ type
     procedure AssignBitmap(const ABitmap:TFastBMP);overload;
     procedure AttachToBitmap(const ABitmap:TBitmap);
     procedure UnattachBitmap;
+    procedure FillLine(const AY:Integer; const AX:Integer; const ACount:Integer; const AColor:TRGBTriple); inline;
 
     constructor Create(const AWidth,AHeight:Integer);overload;
     constructor Create(const ABitmap:TBitmap); overload;
@@ -108,6 +109,20 @@ begin
   else
     FBitmap.Free;
 
+end;
+
+procedure TFastBMP.FillLine(const AY:Integer; const AX, ACount: Integer;
+  const AColor: TRGBTriple);
+var
+  LStartPointer:PRGBTriple;
+  i:Integer;
+begin
+  LStartPointer:= GetPixel(AX,AY);
+  for i := ACount downto 0 do
+  begin
+    LStartPointer^:=AColor;
+    inc(LStartPointer);
+  end;
 end;
 
 function TFastBMP.GetHeight: Integer;
