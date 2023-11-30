@@ -118,7 +118,7 @@ var
   i:Integer;
 begin
   LStartPointer:= GetPixel(AX,AY);
-  for i := ACount downto 0 do
+  for i := ACount-1 downto 0 do
   begin
     LStartPointer^:=AColor;
     inc(LStartPointer);
