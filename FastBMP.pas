@@ -2,40 +2,42 @@
 
 interface
 uses
-  Graphics;
+  Graphics, Types;
 
 type
-  TRGBTriple = packed record
-    R, G, B: Byte;
+  TARGBQuadruple = packed record
+    A, R, G, B: Byte;
   end;
 
-  PRGBTriple = ^TRGBTriple;
-  TRGBTripleArray = ARRAY[Word] of TRGBTriple;
-  PRGBTripleArray = ^TRGBTripleArray;
+  PARGBQuadruple = ^TARGBQuadruple;
+  TARGBQuadrupleArray = ARRAY[Word] of TARGBQuadruple;
+  PARGBQuadrupleArray = ^TARGBQuadrupleArray;
   TFastBMP = class
   private
     FOriginalBitmap:TBitmap;
     FBitmap:TBitmap;
-    FLines: array of PRGBTripleArray;
-    procedure InitializeBitmap(const AWidth,AHeight:Integer; const APixelFormat:TPixelFormat = pf24bit);
+    FLines: array of PARGBQuadrupleArray;
+    procedure InitializeBitmap(const AWidth,AHeight:Integer; const APixelFormat:TPixelFormat = pf32bit);
 
 
     procedure BuildLineAccessArray;
-    function GetPixel(X, Y: Integer): PRGBTriple; inline;
+    function GetPixel(X, Y: Integer): PARGBQuadruple; inline;
     function GetHeight: Integer;
     function GetWidth: Integer;
+    procedure FillDWord(ACount,ABuffer : DWORD; var Dest) ;
   public
     procedure AssignBitmap(const ABitmap:TBitmap);overload;
     procedure AssignBitmap(const ABitmap:TFastBMP);overload;
     procedure AttachToBitmap(const ABitmap:TBitmap);
     procedure UnattachBitmap;
-    procedure FillLine(const AY:Integer; const AX:Integer; const ACount:Integer; const AColor:TRGBTriple); inline;
+    procedure FillLine(const AY:Integer; const AX:Integer; const ACount:Integer; const AColor:TARGBQuadruple); overload; inline;
+    procedure FillLine(const AY:Integer; const AX:Integer; const ACount:Integer; const AGreyValue:Byte); overload; inline;
 
     constructor Create(const AWidth,AHeight:Integer);overload;
     constructor Create(const ABitmap:TBitmap); overload;
     destructor Destroy;
 
-    property Pixels[X:Integer;Y:Integer]:PRGBTriple read GetPixel;
+    property Pixels[X:Integer;Y:Integer]:PARGBQuadruple read GetPixel;
     property Width:Integer read GetWidth;
     property Height:Integer read GetHeight;
   end;
@@ -49,13 +51,13 @@ uses
 constructor TFastBMP.Create(const AWidth, AHeight: Integer);
 begin
   FBitmap:= TBitmap.Create;
-  InitializeBitmap(AWidth,AHeight,pf24bit); //for now only 24 bit is supported
+  InitializeBitmap(AWidth,AHeight,pf32bit); //for now only 24 bit is supported
 end;
 
 procedure TFastBMP.AssignBitmap(const ABitmap: TBitmap);
 begin
   FBitmap.Assign(ABitmap);
-  FBitmap.PixelFormat:= pf24bit; //for now only 24 bit is supported
+  FBitmap.PixelFormat:= pf32bit; //for now only 24 bit is supported
   BuildLineAccessArray;
 end;
 
@@ -77,7 +79,7 @@ begin
       FOriginalBitmap:= FBitmap; //store the managed bitmap pointer for later release
   end;
   FBitmap:= ABitmap;
-  FBitmap.PixelFormat:= pf24bit; // we always need to do this ;)
+  FBitmap.PixelFormat:= pf32bit; // we always need to do this ;)
   BuildLineAccessArray;
 end;
 
@@ -88,7 +90,7 @@ begin
   setlength(FLines,FBitmap.Height);
   for i := 0 to FBitmap.Height-1 do
   begin
-    FLines[i]:= PRGBTripleArray(FBitmap.ScanLine[i]);
+    FLines[i]:= PARGBQuadrupleArray(FBitmap.ScanLine[i]);
   end;
 end;
 
@@ -111,18 +113,27 @@ begin
 
 end;
 
-procedure TFastBMP.FillLine(const AY:Integer; const AX, ACount: Integer;
-  const AColor: TRGBTriple);
-var
-  LStartPointer:PRGBTriple;
-  i:Integer;
+procedure TFastBMP.FillDWord(ACount, ABuffer: DWORD; var Dest);assembler;
 begin
-  LStartPointer:= GetPixel(AX,AY);
-  for i := ACount-1 downto 0 do
-  begin
-    LStartPointer^:=AColor;
-    inc(LStartPointer);
-  end;
+   asm
+    MOV EDI,Dest ;
+    MOV ECX,ACount ;
+    MOV EAX,ABuffer ;
+    CLD ;
+    REP STOSD
+   end ;
+end;
+
+procedure TFastBMP.FillLine(const AY, AX, ACount: Integer;
+  const AGreyValue: Byte);
+begin
+  FillChar(GetPixel(AX,AY)^,SizeOf(TARGBQuadruple)*ACount,AGreyValue);
+end;
+
+procedure TFastBMP.FillLine(const AY:Integer; const AX, ACount: Integer;
+  const AColor: TARGBQuadruple);
+begin
+  FillDWord(ACount,DWORD(AColor),GetPixel(AX,AY)^);
 end;
 
 function TFastBMP.GetHeight: Integer;
@@ -130,7 +141,7 @@ begin
   Result:= FBitmap.Height;
 end;
 
-function TFastBMP.GetPixel(X, Y: Integer): PRGBTriple;
+function TFastBMP.GetPixel(X, Y: Integer): PARGBQuadruple;
 begin
   Result:= @FLines[Y][X];
 end;
