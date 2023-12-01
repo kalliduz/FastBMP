@@ -1,5 +1,5 @@
 # FastBMP
-A lightweight wrapper for direct pixel data access. The current implementation is limited to 24-bit Bitmap and will enforce this pixel format.
+A lightweight wrapper for direct pixel data access. The current implementation is limited to 32-bit Bitmap (best memory alignment) and will enforce this pixel format.
 
 ## Usage
 You can attach to an existing Bitmap and use it like a wrapper.
