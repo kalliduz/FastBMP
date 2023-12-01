@@ -6,7 +6,7 @@ uses
 
 type
   TARGBQuadruple = packed record
-     R, G, B, A: Byte;
+     B, G, R, A: Byte;
   end;
 
   PARGBQuadruple = ^TARGBQuadruple;
